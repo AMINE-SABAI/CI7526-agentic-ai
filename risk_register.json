@@ -1,0 +1,368 @@
+{
+  "assets": [
+    {
+      "id": "A1",
+      "description": "Customer personal data (name, email, address) stored in the database."
+    },
+    {
+      "id": "A2",
+      "description": "Customer credit card data stored in the database."
+    },
+    {
+      "id": "A3",
+      "description": "Payment API that processes financial transactions."
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "id": "V1",
+      "description": "Login form is susceptible to SQL injection, allowing attackers to bypass authentication or extract customer personal data.",
+      "asset_id": "A1",
+      "cwe_id": "CWE-89",
+      "owasp": "A03:2021",
+      "nist": {
+        "control_id": "SI-10",
+        "control_title": "Information Input Validation",
+        "effectiveness_level": "forte",
+        "effectiveness_frac": 0.85,
+        "justification": "Enforcing strict input validation and parameterized queries directly prevents SQL injection by ensuring malicious input is never interpreted as executable SQL code."
+      }
+    },
+    {
+      "id": "V2",
+      "description": "Credit card data is stored without adequate encryption, exposing it in cleartext if the database is compromised.",
+      "asset_id": "A2",
+      "cwe_id": "CWE-311",
+      "owasp": "A02:2021",
+      "nist": {
+        "control_id": "SC-28",
+        "control_title": "Protection of Information at Rest",
+        "effectiveness_level": "forte",
+        "effectiveness_frac": 0.85,
+        "justification": "SC-28 directly mandates cryptographic protection of sensitive data stored at rest, ensuring that credit card data is encrypted and unreadable even if the database is compromised."
+      }
+    },
+    {
+      "id": "V3",
+      "description": "No rate limiting on the login endpoint allows unlimited authentication attempts, enabling brute-force attacks against customer accounts.",
+      "asset_id": "A1",
+      "cwe_id": "CWE-307",
+      "owasp": "A07:2021",
+      "nist": {
+        "control_id": "AC-7",
+        "control_title": "Unsuccessful Logon Attempts",
+        "effectiveness_level": "forte",
+        "effectiveness_frac": 0.85,
+        "justification": "AC-7 explicitly requires limiting and responding to consecutive failed authentication attempts, directly mitigating brute-force attacks by locking out or throttling repeated login failures."
+      }
+    },
+    {
+      "id": "V4",
+      "description": "The payment API lacks proper authorization checks, potentially allowing one customer to trigger or view transactions belonging to another.",
+      "asset_id": "A3",
+      "cwe_id": "CWE-639",
+      "owasp": "A01:2021",
+      "nist": {
+        "control_id": "AC-3",
+        "control_title": "Access Enforcement",
+        "effectiveness_level": "forte",
+        "effectiveness_frac": 0.85,
+        "justification": "AC-3 requires enforcement of approved authorizations for access to system resources, ensuring that the payment API validates that each customer can only access their own transactions."
+      }
+    },
+    {
+      "id": "V5",
+      "description": "Sensitive credit card data is transmitted to the payment API over an unencrypted channel, exposing it to interception.",
+      "asset_id": "A2",
+      "cwe_id": "CWE-319",
+      "owasp": "A02:2021",
+      "nist": {
+        "control_id": "SC-8",
+        "control_title": "Transmission Confidentiality and Integrity",
+        "effectiveness_level": "forte",
+        "effectiveness_frac": 0.85,
+        "justification": "SC-8 mandates cryptographic protection of data in transit, directly preventing interception of sensitive credit card data transmitted between the client and the payment API."
+      }
+    },
+    {
+      "id": "V6",
+      "description": "Detailed error messages from the database or payment API are exposed to end users, leaking system internals and sensitive data.",
+      "asset_id": "A1",
+      "cwe_id": "CWE-209",
+      "owasp": "A05:2021",
+      "nist": {
+        "control_id": "SI-11",
+        "control_title": "Error Handling",
+        "effectiveness_level": "forte",
+        "effectiveness_frac": 0.85,
+        "justification": "SI-11 directly requires that systems generate error messages revealing only information necessary for corrective action and not expose sensitive internals, eliminating the information leakage from verbose error messages."
+      }
+    }
+  ],
+  "threats": [
+    {
+      "id": "T1",
+      "description": "An external attacker exploits SQL injection on the login form to dump the customer database, extracting personal data and credit card records.",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "disclosure"
+      },
+      "exploits": [
+        "V1",
+        "V2",
+        "V6"
+      ],
+      "likelihood_level": "moderee",
+      "likelihood_num": 3,
+      "likelihood_justif": "SQL injection on login forms is extremely common and widely automated, but modern frameworks and WAFs reduce success rates significantly; still plausible if input validation is weak."
+    },
+    {
+      "id": "T2",
+      "description": "An external attacker performs a brute-force credential stuffing attack against the login endpoint to take over customer accounts.",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "disclosure"
+      },
+      "exploits": [
+        "V3"
+      ],
+      "likelihood_level": "tres_elevee",
+      "likelihood_num": 5,
+      "likelihood_justif": "Credential stuffing is fully automated, requires no special skill, and is one of the most frequently observed attacks against any internet-facing login endpoint today."
+    },
+    {
+      "id": "T3",
+      "description": "An external attacker intercepts network traffic between the shop and the payment API to capture credit card data in transit.",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "disclosure"
+      },
+      "exploits": [
+        "V5"
+      ],
+      "likelihood_level": "tres_faible",
+      "likelihood_num": 1,
+      "likelihood_justif": "TLS is universally adopted for payment API communications, making in-transit interception extremely difficult without prior compromise of an endpoint, making this scenario very rare in practice."
+    },
+    {
+      "id": "T4",
+      "description": "An authenticated malicious customer manipulates payment API requests to access or alter another customer's transactions via an IDOR vulnerability.",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "application",
+        "outcome": "modification"
+      },
+      "exploits": [
+        "V4"
+      ],
+      "likelihood_level": "moderee",
+      "likelihood_num": 3,
+      "likelihood_justif": "IDOR vulnerabilities in payment flows are commonly discovered by opportunistic attackers and security researchers; exploiting them requires only a valid authenticated session and basic request manipulation."
+    },
+    {
+      "id": "T5",
+      "description": "A malicious insider with database access extracts stored cleartext credit card data for financial gain.",
+      "octave_profile": {
+        "actor": "malicious insider",
+        "motive": "deliberate",
+        "access": "physical",
+        "outcome": "disclosure"
+      },
+      "exploits": [
+        "V2"
+      ],
+      "likelihood_level": "faible",
+      "likelihood_num": 2,
+      "likelihood_justif": "Storing cleartext credit card data violates PCI-DSS and is increasingly rare; while insider threats are real, the combination of direct DB access and unencrypted card data being present simultaneously is uncommon in modern systems."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "T1-V1",
+      "threat_id": "T1",
+      "vuln_id": "V1",
+      "asset_id": "A1",
+      "threat_desc": "An external attacker exploits SQL injection on the login form to dump the customer database, extracting personal data and credit card records.",
+      "vuln_desc": "Login form is susceptible to SQL injection, allowing attackers to bypass authentication or extract customer personal data.",
+      "octave": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "disclosure"
+      },
+      "impact_level": "critique",
+      "impact_num": 5,
+      "impact_justif": "SQL injection enabling full database dump exposes mass personal data and payment records, constituting a catastrophic confidentiality breach with severe regulatory consequences.",
+      "inherent_score": 15,
+      "inherent_level": "CRITIQUE",
+      "residual_likelihood_num": 1,
+      "residual_score": 5,
+      "residual_level": "MODERE"
+    },
+    {
+      "id": "T1-V2",
+      "threat_id": "T1",
+      "vuln_id": "V2",
+      "asset_id": "A2",
+      "threat_desc": "An external attacker exploits SQL injection on the login form to dump the customer database, extracting personal data and credit card records.",
+      "vuln_desc": "Credit card data is stored without adequate encryption, exposing it in cleartext if the database is compromised.",
+      "octave": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "disclosure"
+      },
+      "impact_level": "critique",
+      "impact_num": 5,
+      "impact_justif": "Cleartext credit card storage means a database compromise yields fully usable PAN data at scale, representing maximum financial and compliance impact under PCI-DSS.",
+      "inherent_score": 15,
+      "inherent_level": "CRITIQUE",
+      "residual_likelihood_num": 1,
+      "residual_score": 5,
+      "residual_level": "MODERE"
+    },
+    {
+      "id": "T1-V6",
+      "threat_id": "T1",
+      "vuln_id": "V6",
+      "asset_id": "A1",
+      "threat_desc": "An external attacker exploits SQL injection on the login form to dump the customer database, extracting personal data and credit card records.",
+      "vuln_desc": "Detailed error messages from the database or payment API are exposed to end users, leaking system internals and sensitive data.",
+      "octave": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "disclosure"
+      },
+      "impact_level": "modere",
+      "impact_num": 3,
+      "impact_justif": "Verbose error messages leak system internals and potentially partial sensitive data, aiding attackers but not directly causing mass data exposure on their own.",
+      "inherent_score": 9,
+      "inherent_level": "MODERE",
+      "residual_likelihood_num": 1,
+      "residual_score": 3,
+      "residual_level": "FAIBLE"
+    },
+    {
+      "id": "T2-V3",
+      "threat_id": "T2",
+      "vuln_id": "V3",
+      "asset_id": "A1",
+      "threat_desc": "An external attacker performs a brute-force credential stuffing attack against the login endpoint to take over customer accounts.",
+      "vuln_desc": "No rate limiting on the login endpoint allows unlimited authentication attempts, enabling brute-force attacks against customer accounts.",
+      "octave": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "disclosure"
+      },
+      "impact_level": "majeur",
+      "impact_num": 4,
+      "impact_justif": "Successful credential stuffing leads to bulk customer account takeover, exposing personal data and enabling fraudulent transactions across many accounts.",
+      "inherent_score": 20,
+      "inherent_level": "CRITIQUE",
+      "residual_likelihood_num": 1,
+      "residual_score": 4,
+      "residual_level": "FAIBLE"
+    },
+    {
+      "id": "T3-V5",
+      "threat_id": "T3",
+      "vuln_id": "V5",
+      "asset_id": "A2",
+      "threat_desc": "An external attacker intercepts network traffic between the shop and the payment API to capture credit card data in transit.",
+      "vuln_desc": "Sensitive credit card data is transmitted to the payment API over an unencrypted channel, exposing it to interception.",
+      "octave": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "disclosure"
+      },
+      "impact_level": "critique",
+      "impact_num": 5,
+      "impact_justif": "Unencrypted transmission of credit card data to the payment API allows interception of live payment credentials in cleartext, causing catastrophic confidentiality and PCI-DSS compliance failure.",
+      "inherent_score": 5,
+      "inherent_level": "MODERE",
+      "residual_likelihood_num": 1,
+      "residual_score": 5,
+      "residual_level": "MODERE"
+    },
+    {
+      "id": "T4-V4",
+      "threat_id": "T4",
+      "vuln_id": "V4",
+      "asset_id": "A3",
+      "threat_desc": "An authenticated malicious customer manipulates payment API requests to access or alter another customer's transactions via an IDOR vulnerability.",
+      "vuln_desc": "The payment API lacks proper authorization checks, potentially allowing one customer to trigger or view transactions belonging to another.",
+      "octave": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "application",
+        "outcome": "modification"
+      },
+      "impact_level": "majeur",
+      "impact_num": 4,
+      "impact_justif": "IDOR exploitation allowing modification or viewing of other customers' transactions directly compromises transaction integrity and financial data confidentiality at scale.",
+      "inherent_score": 12,
+      "inherent_level": "ELEVE",
+      "residual_likelihood_num": 1,
+      "residual_score": 4,
+      "residual_level": "FAIBLE"
+    },
+    {
+      "id": "T5-V2",
+      "threat_id": "T5",
+      "vuln_id": "V2",
+      "asset_id": "A2",
+      "threat_desc": "A malicious insider with database access extracts stored cleartext credit card data for financial gain.",
+      "vuln_desc": "Credit card data is stored without adequate encryption, exposing it in cleartext if the database is compromised.",
+      "octave": {
+        "actor": "malicious insider",
+        "motive": "deliberate",
+        "access": "physical",
+        "outcome": "disclosure"
+      },
+      "impact_level": "critique",
+      "impact_num": 5,
+      "impact_justif": "A malicious insider extracting cleartext credit card records results in deliberate, targeted mass disclosure of highly regulated financial data with direct fraud potential.",
+      "inherent_score": 10,
+      "inherent_level": "ELEVE",
+      "residual_likelihood_num": 1,
+      "residual_score": 5,
+      "residual_level": "MODERE"
+    }
+  ],
+  "risk_by_asset": {
+    "A1": {
+      "asset": "Customer personal data (name, email, address) stored in the database.",
+      "worst_inherent": "CRITIQUE",
+      "worst_inherent_score": 20,
+      "worst_residual": "MODERE",
+      "worst_residual_score": 5,
+      "scenario_count": 3
+    },
+    "A2": {
+      "asset": "Customer credit card data stored in the database.",
+      "worst_inherent": "CRITIQUE",
+      "worst_inherent_score": 15,
+      "worst_residual": "MODERE",
+      "worst_residual_score": 5,
+      "scenario_count": 3
+    },
+    "A3": {
+      "asset": "Payment API that processes financial transactions.",
+      "worst_inherent": "ELEVE",
+      "worst_inherent_score": 12,
+      "worst_residual": "FAIBLE",
+      "worst_residual_score": 4,
+      "scenario_count": 1
+    }
+  }
+}

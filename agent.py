@@ -10,28 +10,28 @@ from extractor import (
     extract_elements,
     build_model,
     estimate_impact,
+    estimate_probability,
     suggest_controls,
     simulate_protection,
 )
 
 
 # Mets True pour DEMONTRER la boucle de verification (force un echec au 1er tour).
-# Remets False pour les vrais lancements.
 DEMO_FORCE_LOOP = False
 
 
 # ---- 1. LE STATE : la memoire partagee qui circule entre les noeuds ----
 class AgentState(TypedDict):
-    description: str        # l'entree : la description du systeme
-    data: dict              # le JSON extrait par Claude
-    model: object           # le modele CySyMo
+    description: str
+    data: dict
+    model: object
     risk_before: float
     risk_after: float
     verification_passed: bool
-    attempts: int           # compteur pour eviter une boucle infinie
+    attempts: int
 
 
-# ---- 2. LES NOEUDS : chaque etape devient une fonction (state -> state) ----
+# ---- 2. LES NOEUDS ----
 
 def node_extract(state: AgentState) -> AgentState:
     print(f"[NODE] Extraction (tentative {state['attempts'] + 1})...")
@@ -41,10 +41,8 @@ def node_extract(state: AgentState) -> AgentState:
 
 
 def node_verify(state: AgentState) -> AgentState:
-    """Auto-verification : l'agent relit le travail de l'extraction."""
     print("[NODE] Verification...")
 
-    # --- DEMO : force un echec au 1er tour pour prouver que la boucle marche ---
     if DEMO_FORCE_LOOP and state["attempts"] < 2:
         print("   -> (demo) echec force, on reboucle")
         state["verification_passed"] = False
@@ -56,8 +54,6 @@ def node_verify(state: AgentState) -> AgentState:
 
     ok = True
     reasons = []
-
-    # Regle 1 : il faut au moins une vulnerabilite et une menace
     if len(vulns) == 0:
         ok = False
         reasons.append("aucune vulnerabilite")
@@ -65,7 +61,6 @@ def node_verify(state: AgentState) -> AgentState:
         ok = False
         reasons.append("aucune menace")
 
-    # Regle 2 : chaque menace doit avoir un profil OCTAVE complet
     required = {"actor", "motive", "access", "outcome"}
     for t in threats:
         profile = t.get("octave_profile", {})
@@ -93,6 +88,12 @@ def node_impact(state: AgentState) -> AgentState:
     return state
 
 
+def node_probability(state: AgentState) -> AgentState:
+    print("[NODE] Estimation des probabilites d'attaque...")
+    state["model"] = estimate_probability(state["model"])
+    return state
+
+
 def node_controls(state: AgentState) -> AgentState:
     print("[NODE] Suggestion des controles NIST...")
     state["model"] = suggest_controls(state["model"])
@@ -107,23 +108,19 @@ def node_simulate(state: AgentState) -> AgentState:
     return state
 
 
-# ---- 3. L'AIGUILLAGE : decide quoi faire apres la verification ----
+# ---- 3. L'AIGUILLAGE ----
 
 def route_after_verify(state: AgentState) -> str:
-    """
-    Si la verification passe -> on continue vers 'build'.
-    Si elle echoue -> on retourne a 'extract' (boucle), sauf si trop de tentatives.
-    """
     if state["verification_passed"]:
         return "build"
-    if state["attempts"] >= 3:        # garde-fou anti-boucle-infinie
+    if state["attempts"] >= 3:
         print("   -> 3 tentatives atteintes, on continue malgre tout.")
         return "build"
     print("   -> On relance l'extraction.")
     return "extract"
 
 
-# ---- 4. CONSTRUCTION DU GRAPHE : on relie les noeuds ----
+# ---- 4. CONSTRUCTION DU GRAPHE ----
 
 def build_agent(include_simulate: bool = True):
     graph = StateGraph(AgentState)
@@ -132,6 +129,7 @@ def build_agent(include_simulate: bool = True):
     graph.add_node("verify", node_verify)
     graph.add_node("build", node_build)
     graph.add_node("impact", node_impact)
+    graph.add_node("probability", node_probability)
     graph.add_node("controls", node_controls)
 
     graph.add_edge(START, "extract")
@@ -142,7 +140,8 @@ def build_agent(include_simulate: bool = True):
         {"build": "build", "extract": "extract"},
     )
     graph.add_edge("build", "impact")
-    graph.add_edge("impact", "controls")
+    graph.add_edge("impact", "probability")
+    graph.add_edge("probability", "controls")
 
     if include_simulate:
         graph.add_node("simulate", node_simulate)
@@ -165,13 +164,10 @@ if __name__ == "__main__":
 
     agent = build_agent()
 
-    # Schema de l'agent, genere automatiquement depuis le code (pour le rapport).
-    # Colle la sortie sur https://mermaid.live
     print("\n--- SCHEMA DE L'AGENT (Mermaid) ---")
     print(agent.get_graph().draw_mermaid())
     print("--- fin du schema ---\n")
 
-    # L'etat initial
     initial_state = {
         "description": description,
         "data": {},
@@ -182,9 +178,7 @@ if __name__ == "__main__":
         "attempts": 0,
     }
 
-    # On lance l'agent : il parcourt le graphe tout seul
     final_state = agent.invoke(initial_state)
-
     model = final_state["model"]
 
     print("\n=== RESULTAT ===")
@@ -194,9 +188,10 @@ if __name__ == "__main__":
         print("      NIST control:", v[2])
 
     print("\nThreats:")
-    for t in model.threats:
+    for j, t in enumerate(model.threats):
         print(" ", t[0], ":", t[1])
         print("      OCTAVE profile:", t[2])
+        print("      attack probability p:", model.p[j])
 
     print("\n=== RISK SIMULATION ===")
     print("  Risk BEFORE:", round(final_state["risk_before"], 4))

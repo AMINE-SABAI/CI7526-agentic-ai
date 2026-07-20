@@ -1,0 +1,20 @@
+# CySyMo — Python dependencies
+# Install: pip install -r requirements.txt
+
+# Web framework
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+
+# AI
+anthropic==0.28.0
+langgraph==0.1.5
+
+# HTTP client (CVE lookup via NVD API)
+httpx==0.27.0
+
+# Report generation
+reportlab==4.2.0
+python-docx==1.1.2
+
+# Utilities
+python-dotenv==1.0.1
