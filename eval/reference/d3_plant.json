@@ -1,0 +1,23 @@
+{
+  "assets": [
+    {"id": "A1", "description": "Industrial controllers regulating pumps and chemical dosing"},
+    {"id": "A2", "description": "Operator workstations in the control room"},
+    {"id": "A3", "description": "Plant network carrying both industrial control and office traffic"},
+    {"id": "A4", "description": "Historian server and archived sensor readings used for regulatory reporting"},
+    {"id": "A5", "description": "Maintenance laptop used to connect to industrial controllers"}
+  ],
+  "vulnerabilities": [
+    {"id": "V1", "description": "The industrial control network may not be adequately segmented from the office network", "asset_id": "A3"},
+    {"id": "V2", "description": "Industrial controllers may lack strong authentication or secure communication mechanisms", "asset_id": "A1"},
+    {"id": "V3", "description": "Operator workstations may be exposed to threats originating from office computers on the shared network", "asset_id": "A2"},
+    {"id": "V4", "description": "The historian server may lack adequate access controls or integrity protection", "asset_id": "A4"},
+    {"id": "V5", "description": "The maintenance laptop may introduce malware when connected directly to the industrial controllers", "asset_id": "A5"}
+  ],
+  "threats": [
+    {"id": "T1", "description": "An attacker compromises an office computer and moves through the shared network into the industrial control environment", "asset_id": "A3"},
+    {"id": "T2", "description": "An attacker manipulates industrial controllers to disrupt pumps or alter chemical dosing", "asset_id": "A1"},
+    {"id": "T3", "description": "Malware compromises an operator workstation and disrupts plant monitoring or control", "asset_id": "A2"},
+    {"id": "T4", "description": "An attacker modifies or deletes archived sensor readings used for regulatory reporting", "asset_id": "A4"},
+    {"id": "T5", "description": "An infected maintenance laptop transfers malware to the industrial controllers during servicing", "asset_id": "A5"}
+  ]
+}

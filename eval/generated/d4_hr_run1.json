@@ -1,0 +1,152 @@
+{
+  "assets": [
+    {
+      "id": "A1",
+      "description": "Employee contracts stored in the internal HR system"
+    },
+    {
+      "id": "A2",
+      "description": "Salary details stored in the internal HR system"
+    },
+    {
+      "id": "A3",
+      "description": "Performance reviews stored in the internal HR system"
+    },
+    {
+      "id": "A4",
+      "description": "Monthly payroll data export sent to the external accounting firm"
+    },
+    {
+      "id": "A5",
+      "description": "Former employees' records retained in the HR system for several years"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "id": "V1",
+      "description": "Managers can access their entire team's records, increasing the risk of overly broad internal access to sensitive contract data.",
+      "asset_id": "A1"
+    },
+    {
+      "id": "V2",
+      "description": "Salary details are accessible to HR staff across the office network without mention of role-based access controls limiting who can view them.",
+      "asset_id": "A2"
+    },
+    {
+      "id": "V3",
+      "description": "Performance reviews are accessible to managers, creating a risk that sensitive appraisal data could be viewed beyond its intended audience.",
+      "asset_id": "A3"
+    },
+    {
+      "id": "V4",
+      "description": "Payroll export is transmitted to an external third party, introducing risk if the transfer channel or the accounting firm's security posture is not controlled.",
+      "asset_id": "A4"
+    },
+    {
+      "id": "V5",
+      "description": "Former employees' records are retained for several years with no described mechanism to restrict or audit access to stale sensitive data.",
+      "asset_id": "A5"
+    }
+  ],
+  "threats": [
+    {
+      "id": "T1",
+      "description": "A malicious insider HR staff member accesses and exfiltrates employee contract data from the office network.",
+      "asset_id": "A1",
+      "octave_profile": {
+        "actor": "malicious insider (HR staff)",
+        "motive": "deliberate",
+        "access": "network (office network via HR application)",
+        "outcome": "disclosure"
+      }
+    },
+    {
+      "id": "T2",
+      "description": "A manager deliberately accesses salary details of team members beyond their own team, exploiting broad access permissions.",
+      "asset_id": "A2",
+      "octave_profile": {
+        "actor": "malicious insider (manager)",
+        "motive": "deliberate",
+        "access": "network (office network via HR application)",
+        "outcome": "disclosure"
+      }
+    },
+    {
+      "id": "T3",
+      "description": "An external attacker compromises the office network and gains unauthorised access to salary details stored in the HR system.",
+      "asset_id": "A2",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network (office network)",
+        "outcome": "disclosure"
+      }
+    },
+    {
+      "id": "T4",
+      "description": "A manager accesses and leaks performance reviews of employees outside their own team by exploiting insufficient access restrictions.",
+      "asset_id": "A3",
+      "octave_profile": {
+        "actor": "malicious insider (manager)",
+        "motive": "deliberate",
+        "access": "network (office network via HR application)",
+        "outcome": "disclosure"
+      }
+    },
+    {
+      "id": "T5",
+      "description": "An external attacker intercepts the monthly payroll export in transit to the accounting firm and obtains sensitive salary data.",
+      "asset_id": "A4",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network (data transmission channel)",
+        "outcome": "disclosure"
+      }
+    },
+    {
+      "id": "T6",
+      "description": "A compromised or malicious employee at the external accounting firm misuses the payroll data received each month.",
+      "asset_id": "A4",
+      "octave_profile": {
+        "actor": "malicious insider (external accounting firm employee)",
+        "motive": "deliberate",
+        "access": "via application (accounting firm's systems receiving the export)",
+        "outcome": "disclosure"
+      }
+    },
+    {
+      "id": "T7",
+      "description": "An HR staff member accidentally sends the payroll export to an incorrect recipient, exposing sensitive salary data.",
+      "asset_id": "A4",
+      "octave_profile": {
+        "actor": "HR staff (insider)",
+        "motive": "accidental",
+        "access": "network (email or file transfer)",
+        "outcome": "disclosure"
+      }
+    },
+    {
+      "id": "T8",
+      "description": "An external attacker targets the HR system to access retained records of former employees whose credentials or data could be leveraged for fraud.",
+      "asset_id": "A5",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network (office network via HR application)",
+        "outcome": "disclosure"
+      }
+    },
+    {
+      "id": "T9",
+      "description": "A malicious insider accesses and modifies retained records of former employees to falsify employment history or salary information.",
+      "asset_id": "A5",
+      "octave_profile": {
+        "actor": "malicious insider (HR staff)",
+        "motive": "deliberate",
+        "access": "network (office network via HR application)",
+        "outcome": "modification"
+      }
+    }
+  ]
+}

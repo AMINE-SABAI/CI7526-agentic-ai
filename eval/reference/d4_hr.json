@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {"id": "A1", "description": "Employee contracts and performance reviews"},
+    {"id": "A2", "description": "Employee salary and payroll data"},
+    {"id": "A3", "description": "Internal human resources system"},
+    {"id": "A4", "description": "Monthly payroll export files sent to the external accounting firm"},
+    {"id": "A5", "description": "Former employees' records retained after their departure"}
+  ],
+  "vulnerabilities": [
+    {"id": "V1", "description": "Access controls may not adequately restrict managers to records belonging to their own teams", "asset_id": "A1"},
+    {"id": "V2", "description": "HR staff accounts may have excessive privileges within the human resources system", "asset_id": "A3"},
+    {"id": "V3", "description": "Payroll export files may be transmitted to the accounting firm without adequate encryption", "asset_id": "A4"},
+    {"id": "V4", "description": "The external accounting firm may apply inadequate security controls to received payroll data", "asset_id": "A4"},
+    {"id": "V5", "description": "Retention and deletion rules for former employees' records may not be adequately defined or enforced", "asset_id": "A5"}
+  ],
+  "threats": [
+    {"id": "T1", "description": "A manager accesses contracts or performance reviews belonging to employees outside their own team", "asset_id": "A1"},
+    {"id": "T2", "description": "A malicious or compromised HR user alters employee salary or payroll information", "asset_id": "A2"},
+    {"id": "T3", "description": "An attacker compromises an office workstation and gains unauthorized access to the human resources system", "asset_id": "A3"},
+    {"id": "T4", "description": "An attacker intercepts payroll export files while they are being sent to the external accounting firm", "asset_id": "A4"},
+    {"id": "T5", "description": "A compromise of the external accounting firm exposes employee payroll data", "asset_id": "A4"},
+    {"id": "T6", "description": "A data breach exposes former employees' records that are still retained in the system", "asset_id": "A5"}
+  ]
+}

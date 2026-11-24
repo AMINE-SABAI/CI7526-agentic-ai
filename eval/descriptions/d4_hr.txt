@@ -1,0 +1,5 @@
+A company runs an internal human resources system holding employee contracts,
+salary details and performance reviews. HR staff access it from the office
+network, and managers can consult their own team's records. Payroll data is
+exported monthly and sent to an external accounting firm. Former employees'
+records are kept in the system for several years after they leave.

@@ -1,0 +1,6 @@
+A water treatment plant uses industrial controllers to regulate pumps and
+chemical dosing. Operators monitor the process from workstations in a control
+room, and the same network also carries the plant's office computers. Sensor
+readings are archived on a historian server for regulatory reporting. A
+maintenance engineer connects a laptop to the controllers during scheduled
+servicing.

@@ -1,0 +1,151 @@
+{
+  "assets": [
+    {
+      "id": "A1",
+      "description": "Industrial controllers that regulate pumps and chemical dosing"
+    },
+    {
+      "id": "A2",
+      "description": "Operator workstations used to monitor and control the treatment process from the control room"
+    },
+    {
+      "id": "A3",
+      "description": "Shared operational and office network carrying both control and business traffic"
+    },
+    {
+      "id": "A4",
+      "description": "Historian server archiving sensor readings for regulatory reporting"
+    },
+    {
+      "id": "A5",
+      "description": "Maintenance engineer laptop connected to controllers during scheduled servicing"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "id": "V1",
+      "description": "Industrial controllers may lack authentication, allowing unauthorized commands to be issued directly.",
+      "asset_id": "A1"
+    },
+    {
+      "id": "V2",
+      "description": "Operator workstations share the same network as office computers, expanding the attack surface to the control environment.",
+      "asset_id": "A2"
+    },
+    {
+      "id": "V3",
+      "description": "The absence of network segmentation between operational technology and office IT allows lateral movement between domains.",
+      "asset_id": "A3"
+    },
+    {
+      "id": "V4",
+      "description": "The historian server may be reachable from the office network, exposing regulatory data to unauthorized access.",
+      "asset_id": "A4"
+    },
+    {
+      "id": "V5",
+      "description": "The maintenance laptop may introduce malware into the controller network if it is not scanned or controlled before connection.",
+      "asset_id": "A5"
+    },
+    {
+      "id": "V6",
+      "description": "Industrial controllers may run outdated or unpatched firmware, leaving known vulnerabilities exploitable.",
+      "asset_id": "A1"
+    },
+    {
+      "id": "V7",
+      "description": "The historian server may store data without integrity controls, allowing undetected tampering of regulatory records.",
+      "asset_id": "A4"
+    }
+  ],
+  "threats": [
+    {
+      "id": "T1",
+      "description": "An external attacker pivots from a compromised office computer through the shared network to issue malicious commands to industrial controllers.",
+      "asset_id": "A1",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "modification"
+      }
+    },
+    {
+      "id": "T2",
+      "description": "An external attacker disrupts pump and chemical dosing operations by sending unauthorized commands to industrial controllers via the unsegmented network.",
+      "asset_id": "A1",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "interruption"
+      }
+    },
+    {
+      "id": "T3",
+      "description": "A malicious insider uses an operator workstation to alter process control parameters beyond safe limits.",
+      "asset_id": "A2",
+      "octave_profile": {
+        "actor": "malicious insider",
+        "motive": "deliberate",
+        "access": "via application",
+        "outcome": "modification"
+      }
+    },
+    {
+      "id": "T4",
+      "description": "An external attacker compromises an office computer and moves laterally across the shared network to reach control room workstations.",
+      "asset_id": "A3",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "disclosure"
+      }
+    },
+    {
+      "id": "T5",
+      "description": "An external attacker accesses the historian server over the shared network and exfiltrates archived sensor readings.",
+      "asset_id": "A4",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "disclosure"
+      }
+    },
+    {
+      "id": "T6",
+      "description": "A malicious insider tampers with historical sensor records on the historian server to falsify regulatory compliance reports.",
+      "asset_id": "A4",
+      "octave_profile": {
+        "actor": "malicious insider",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "modification"
+      }
+    },
+    {
+      "id": "T7",
+      "description": "The maintenance engineer accidentally introduces malware from the laptop to the industrial controllers during a scheduled servicing session.",
+      "asset_id": "A5",
+      "octave_profile": {
+        "actor": "maintenance engineer",
+        "motive": "accidental",
+        "access": "physical",
+        "outcome": "modification"
+      }
+    },
+    {
+      "id": "T8",
+      "description": "An external attacker pre-compromises the maintenance laptop so that it delivers malware to controllers when physically connected during servicing.",
+      "asset_id": "A5",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "physical",
+        "outcome": "destruction"
+      }
+    }
+  ]
+}

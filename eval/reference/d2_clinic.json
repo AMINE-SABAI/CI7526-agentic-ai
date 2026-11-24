@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {"id": "A1", "description": "Doctor and nurse account credentials"},
+    {"id": "A2", "description": "Patient medical records containing medical histories and test results"},
+    {"id": "A3", "description": "Patient appointment records"},
+    {"id": "A4", "description": "Public appointment-booking website"},
+    {"id": "A5", "description": "Clinic servers hosting the patient records system"},
+    {"id": "A6", "description": "External IT provider remote access to the clinic servers"}
+  ],
+  "vulnerabilities": [
+    {"id": "V1", "description": "Staff accounts may rely only on username and password without multi-factor authentication", "asset_id": "A1"},
+    {"id": "V2", "description": "Access permissions may not adequately restrict patient records according to staff roles", "asset_id": "A2"},
+    {"id": "V3", "description": "The public appointment-booking website may not adequately validate user input", "asset_id": "A4"},
+    {"id": "V4", "description": "The external provider's remote access may be insufficiently restricted or monitored", "asset_id": "A6"},
+    {"id": "V5", "description": "Clinic servers may not be patched promptly because maintenance is outsourced", "asset_id": "A5"}
+  ],
+  "threats": [
+    {"id": "T1", "description": "An external attacker compromises a staff account to access patient records", "asset_id": "A1"},
+    {"id": "T2", "description": "A malicious or careless staff member accesses or modifies patient records without authorisation", "asset_id": "A2"},
+    {"id": "T3", "description": "An external attacker exploits the public booking website to access or disrupt appointment data", "asset_id": "A4"},
+    {"id": "T4", "description": "An attacker compromises the external provider's remote access to gain control of the clinic servers", "asset_id": "A6"},
+    {"id": "T5", "description": "Ransomware encrypts the clinic servers and makes patient records unavailable", "asset_id": "A5"}
+  ]
+}

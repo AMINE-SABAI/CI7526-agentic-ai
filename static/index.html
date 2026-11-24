@@ -2752,7 +2752,7 @@ document.getElementById("btn-game-start").addEventListener("click", async()=>{
   const btn = document.getElementById("btn-game-start");
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Initialising…';
   try{
-    const res  = await fetch("/api/simulation/start",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model,config})});
+    const res  = await fetch("/api/simulation/start",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model,config,project_id:currentProjectId||null})});
     const data = await res.json();
     if(data.error){ toast(data.error); btn.disabled=false; btn.textContent="▶ Start & Run"; return; }
     gameSimId = data.sim_id;
@@ -2935,7 +2935,7 @@ document.getElementById("btn-game-start").addEventListener("click", async()=>{
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Initialising…';
 
   try{
-    const res  = await fetch("/api/simulation/start",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model,config})});
+    const res  = await fetch("/api/simulation/start",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model,config,project_id:currentProjectId||null})});
     const data = await res.json();
     if(data.error){ toast(data.error); btn.disabled=false; btn.textContent="▶ Start & Run"; return; }
 
@@ -3569,28 +3569,98 @@ async function renderProjectsList() {
     return;
   }
 
-  data.projects.forEach(p => {
+  for (const p of data.projects) {
+    const isActive = p.project_id === currentProjectId;
+    const riskColor = !p.risk ? "var(--faint)"
+      : p.risk > 0.66 ? "var(--high)"
+      : p.risk > 0.33 ? "var(--moderate)"
+      : "var(--low)";
+
     const row = document.createElement("div");
-    row.style = "display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12px;margin-bottom:3px";
-    row.innerHTML = `
-      <span style="flex:1;font-weight:${p.project_id===currentProjectId?"700":"400"};color:${p.project_id===currentProjectId?"var(--accent)":"var(--ink)"}">
-        ${p.project_id===currentProjectId?"● ":""}${esc(p.name)}
+    row.style = `border:1px solid var(--line);border-radius:8px;margin-bottom:6px;overflow:hidden;${isActive?"border-color:var(--accent)":""}`;
+
+    // Header row
+    const header = document.createElement("div");
+    header.style = `display:flex;align-items:center;gap:6px;padding:7px 10px;cursor:pointer;background:${isActive?"var(--accent-soft)":"var(--surface)"};font-size:12px`;
+    header.innerHTML = `
+      <span style="flex:1;font-weight:${isActive?"700":"500"};color:${isActive?"var(--accent)":"var(--ink)"}">
+        ${isActive?"● ":""}${esc(p.name)}
       </span>
-      <span style="font-family:var(--mono);font-size:10px;color:var(--faint)">${p.risk?p.risk.toFixed(3):""}</span>
-      <button style="background:none;border:none;cursor:pointer;color:var(--faint);font-size:12px;padding:0 2px" data-id="${esc(p.project_id)}" class="del-proj">🗑</button>
+      <span style="font-family:var(--mono);font-size:10px;color:${riskColor};font-weight:600">${p.risk?p.risk.toFixed(3):""}</span>
+      <span style="font-size:10px;color:var(--faint)">${p.updated_at?p.updated_at.slice(0,10):""}</span>
+      <button style="background:none;border:none;cursor:pointer;color:var(--faint);font-size:12px;padding:0 2px;flex-shrink:0" data-id="${esc(p.project_id)}" class="del-proj" title="Delete project">🗑</button>
     `;
-    row.addEventListener("click", async (e) => {
+    row.appendChild(header);
+
+    // Load project on click
+    header.addEventListener("click", async (e) => {
       if (e.target.closest(".del-proj")) return;
       await openProject(p.project_id, p.name);
     });
-    row.querySelector(".del-proj").addEventListener("click", async (e) => {
+
+    // Delete
+    header.querySelector(".del-proj").addEventListener("click", async (e) => {
       e.stopPropagation();
-      if (!confirm(`Delete "${p.name}"?`)) return;
+      if (!confirm(`Delete "${p.name}" and all its simulations?`)) return;
       await fetch(`/api/projects/${p.project_id}`, {method:"DELETE"});
       renderProjectsList();
     });
+
+    // Simulations linked to this project
+    try {
+      const simRes  = await fetch(`/api/projects/${p.project_id}/simulations`);
+      const simData = await simRes.json();
+      const sims    = simData.simulations || [];
+      if (sims.length) {
+        const simList = document.createElement("div");
+        simList.style = "border-top:1px solid var(--line);padding:6px 10px;background:var(--surface-2)";
+        sims.slice(0, 3).forEach(s => {
+          const badge = s.game_over
+            ? `<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px;background:${s.winner==="attacker"?"rgba(216,67,58,.12)":"rgba(31,157,116,.12)"};color:${s.winner==="attacker"?"var(--high)":"var(--low)"}">${s.winner==="attacker"?"ATK":"DEF"}</span>`
+            : `<span style="font-size:9px;color:var(--faint)">in progress</span>`;
+          const simRow = document.createElement("div");
+          simRow.style = "display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px;cursor:pointer";
+          simRow.innerHTML = `
+            <span style="color:var(--faint)">⚔</span>
+            <span style="flex:1;font-family:var(--mono);color:var(--muted)">${esc(s.sim_id)}</span>
+            ${badge}
+          `;
+          simRow.addEventListener("click", async () => {
+            // Load project first, then restore simulation
+            await openProject(p.project_id, p.name);
+            const r = await fetch(`/api/simulations/${s.sim_id}/restore`);
+            const d = await r.json();
+            if (!d.error) {
+              gameSimId = s.sim_id;
+              document.querySelector('[data-page="game"]').click();
+              renderState(d.state);
+              document.getElementById("g-log").innerHTML = "";
+              (d.state.log||[]).slice().reverse().forEach(entry=>{
+                appendDetailedLog(entry, d.state.initial_risk);
+              });
+              document.getElementById("btn-game-reset").style.display = "";
+              document.getElementById("btn-export-report").style.display = "";
+              setStatus(d.state.game_over
+                ? `Game over — ${d.state.winner==="attacker"?"Attacker":"Defender"} won`
+                : `Restored — turn ${d.state.turn}/${d.state.max_turns}`);
+              document.getElementById("project-panel").style.display = "none";
+              toast(`Simulation ${s.sim_id} loaded.`);
+            }
+          });
+          simList.appendChild(simRow);
+        });
+        if (sims.length > 3) {
+          const more = document.createElement("div");
+          more.style = "font-size:10px;color:var(--faint);padding-top:2px";
+          more.textContent = `+${sims.length - 3} more simulations`;
+          simList.appendChild(more);
+        }
+        row.appendChild(simList);
+      }
+    } catch(_) {}
+
     list.appendChild(row);
-  });
+  }
 }
 
 async function openProject(projectId, name) {
@@ -3658,6 +3728,7 @@ document.getElementById("btn-create-project").addEventListener("click", async ()
   setCurrentProject(data.project_id, data.name);
   document.getElementById("new-project-name").value = "";
   renderAll(); recompute(); renderInstrument();
+  document.getElementById("project-panel").style.display = "none";
   toast(`Project "${data.name}" created.`);
 });
 
@@ -3676,6 +3747,16 @@ document.getElementById("btn-create-project").addEventListener("click", async ()
   // Load project from URL if present (only on normal pages)
   if (prjMatch && !atkMatch && !defMatch && !mstMatch) {
     await openProject(prjMatch[1], "");
+  } else if (!atkMatch && !defMatch && !mstMatch && !simMatch && !prjMatch) {
+    // No URL — auto-load the most recently updated project
+    try {
+      const res  = await fetch("/api/projects");
+      const data = await res.json();
+      if (data.projects && data.projects.length > 0) {
+        const last = data.projects[0]; // already sorted by updated_at DESC
+        await openProject(last.project_id, last.name);
+      }
+    } catch(_) {}
   }
 
   // Hook auto-save after every recompute

@@ -479,12 +479,16 @@ import simulation as SIM
 @app.post("/api/simulation/start")
 def api_sim_start(payload: dict = Body(...)):
     """Start a new adversarial simulation from the current CySyMo model."""
-    model  = payload.get("model", {})
-    config = payload.get("config", {})
+    model      = payload.get("model", {})
+    config     = payload.get("config", {})
+    project_id = payload.get("project_id")   # optional — links sim to project
     if not model.get("vulnerabilities"):
         return {"error": "Generate a model first (need at least one vulnerability)."}
     try:
         sim_id = SIM.start_simulation(model, config)
+        # Link to project if provided
+        if project_id:
+            DB.link_simulation_to_project(sim_id, project_id)
         return {"sim_id": sim_id, "state": SIM.get_state(sim_id)}
     except Exception as e:
         return {"error": str(e)}
@@ -747,7 +751,7 @@ def api_project_load(project_id: str):
 
 @app.put("/api/projects/{project_id}")
 def api_project_save(project_id: str, payload: dict = Body(...)):
-    """Save full project state (called on every model change)."""
+    """Save full project state — called automatically on every model change."""
     state = payload.get("state", {})
     name  = payload.get("name", "Untitled")
     risk  = float(payload.get("risk", 0.0))
@@ -764,6 +768,11 @@ def api_project_rename(project_id: str, payload: dict = Body(...)):
 def api_project_delete(project_id: str):
     ok = DB.delete_project(project_id)
     return {"ok": ok}
+
+@app.get("/api/projects/{project_id}/simulations")
+def api_project_simulations(project_id: str):
+    """Return all simulations linked to a project."""
+    return {"simulations": DB.list_project_simulations(project_id)}
 
 @app.get("/project/{project_id}")
 def project_page(project_id: str):

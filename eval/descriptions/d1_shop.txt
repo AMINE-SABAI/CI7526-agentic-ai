@@ -1,0 +1,5 @@
+An online shop sells physical goods to consumers. Customers create an account
+with an email address and a password, and their delivery address and order
+history are stored in a database. Card payments are handled by a third-party
+payment provider, and the shop keeps a record of each transaction. Staff access
+an administration interface to manage the product catalogue and view orders.

@@ -331,3 +331,135 @@ def delete_game(game_id: str) -> bool:
     with _conn() as con:
         cur = con.execute("DELETE FROM games WHERE game_id = ?", (game_id,))
     return cur.rowcount > 0
+
+# ══════════════════════════════════════════════════════
+#  PROJECTS
+# ══════════════════════════════════════════════════════
+
+def _ensure_projects_table():
+    with _conn() as con:
+        con.executescript("""
+            CREATE TABLE IF NOT EXISTS projects (
+                project_id  TEXT PRIMARY KEY,
+                name        TEXT NOT NULL DEFAULT 'Untitled',
+                created_at  TEXT NOT NULL,
+                updated_at  TEXT NOT NULL,
+                risk        REAL NOT NULL DEFAULT 0.0,
+                level       TEXT NOT NULL DEFAULT '',
+                state       TEXT NOT NULL DEFAULT '{}'
+            );
+            CREATE TABLE IF NOT EXISTS simulation_project (
+                sim_id     TEXT NOT NULL,
+                project_id TEXT NOT NULL,
+                PRIMARY KEY (sim_id, project_id)
+            );
+        """)
+
+_ensure_projects_table()
+
+
+def create_project(name: str) -> dict:
+    """Create a new empty project and return it."""
+    import uuid
+    ts = datetime.datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    project_id = str(uuid.uuid4())[:8]
+    empty_state = json.dumps({
+        "assets": [], "vulnerabilities": [], "threats": [],
+        "impacts": [], "scenarios": [], "history": []
+    })
+    with _conn() as con:
+        con.execute("""
+            INSERT INTO projects (project_id, name, created_at, updated_at, risk, level, state)
+            VALUES (?, ?, ?, ?, 0.0, '', ?)
+        """, (project_id, name.strip() or "Untitled", ts, ts, empty_state))
+    return {
+        "project_id": project_id,
+        "name": name.strip() or "Untitled",
+        "created_at": ts,
+        "updated_at": ts,
+        "risk": 0.0,
+        "level": "",
+    }
+
+
+def list_projects() -> list[dict]:
+    with _conn() as con:
+        rows = con.execute(
+            "SELECT project_id, name, created_at, updated_at, risk, level FROM projects ORDER BY updated_at DESC"
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def load_project(project_id: str) -> dict | None:
+    with _conn() as con:
+        row = con.execute(
+            "SELECT * FROM projects WHERE project_id = ?", (project_id,)
+        ).fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    try:
+        d["state"] = json.loads(d["state"])
+    except Exception:
+        d["state"] = {}
+    return d
+
+
+def save_project(project_id: str, name: str, state: dict,
+                 risk: float = 0.0, level: str = "") -> None:
+    ts = datetime.datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    with _conn() as con:
+        # Check if project exists
+        exists = con.execute(
+            "SELECT 1 FROM projects WHERE project_id = ?", (project_id,)
+        ).fetchone()
+        if exists:
+            con.execute("""
+                UPDATE projects
+                SET name=?, updated_at=?, risk=?, level=?, state=?
+                WHERE project_id=?
+            """, (name or "Untitled", ts, risk, level, json.dumps(state), project_id))
+        else:
+            # Create it if it doesn't exist yet
+            con.execute("""
+                INSERT INTO projects (project_id, name, created_at, updated_at, risk, level, state)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (project_id, name or "Untitled", ts, ts, risk, level, json.dumps(state)))
+
+
+def rename_project(project_id: str, name: str) -> bool:
+    ts = datetime.datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    with _conn() as con:
+        cur = con.execute(
+            "UPDATE projects SET name=?, updated_at=? WHERE project_id=?",
+            (name.strip() or "Untitled", ts, project_id)
+        )
+    return cur.rowcount > 0
+
+
+def delete_project(project_id: str) -> bool:
+    with _conn() as con:
+        cur = con.execute("DELETE FROM projects WHERE project_id=?", (project_id,))
+        con.execute("DELETE FROM simulation_project WHERE project_id=?", (project_id,))
+    return cur.rowcount > 0
+
+
+def link_simulation_to_project(sim_id: str, project_id: str) -> None:
+    """Associate a simulation with a project."""
+    with _conn() as con:
+        con.execute("""
+            INSERT OR IGNORE INTO simulation_project (sim_id, project_id) VALUES (?, ?)
+        """, (sim_id, project_id))
+
+
+def list_project_simulations(project_id: str) -> list[dict]:
+    """Return all simulations linked to a project."""
+    with _conn() as con:
+        rows = con.execute("""
+            SELECT s.sim_id, s.created_at, s.label, s.game_over, s.winner
+            FROM simulations s
+            JOIN simulation_project sp ON s.sim_id = sp.sim_id
+            WHERE sp.project_id = ?
+            ORDER BY s.created_at DESC
+        """, (project_id,)).fetchall()
+    return [dict(r) for r in rows]

@@ -1,0 +1,130 @@
+{
+  "assets": [
+    {
+      "id": "A1",
+      "description": "Patient records containing medical history and test results"
+    },
+    {
+      "id": "A2",
+      "description": "Patient records system used by doctors and nurses to consult and update files"
+    },
+    {
+      "id": "A3",
+      "description": "Public-facing appointment booking website"
+    },
+    {
+      "id": "A4",
+      "description": "Confirmation emails sent to patients after booking"
+    },
+    {
+      "id": "A5",
+      "description": "Remote server access credentials and connection held by the external IT provider"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "id": "V1",
+      "description": "Username and password authentication provides no multi-factor protection, making credentials susceptible to brute-force or theft.",
+      "asset_id": "A2"
+    },
+    {
+      "id": "V2",
+      "description": "Patient records may lack field-level access controls, allowing any authenticated user to view or modify all patient data regardless of role.",
+      "asset_id": "A1"
+    },
+    {
+      "id": "V3",
+      "description": "The public appointment website is exposed to the internet and may contain exploitable vulnerabilities such as SQL injection or cross-site scripting.",
+      "asset_id": "A3"
+    },
+    {
+      "id": "V4",
+      "description": "Confirmation emails may transmit patient appointment details in plaintext, exposing sensitive information in transit.",
+      "asset_id": "A4"
+    },
+    {
+      "id": "V5",
+      "description": "The external IT provider's remote access to servers is a privileged entry point that may not be subject to the clinic's security monitoring or access controls.",
+      "asset_id": "A5"
+    }
+  ],
+  "threats": [
+    {
+      "id": "T1",
+      "description": "An external attacker steals or guesses staff credentials to log into the patient records system and access confidential medical data.",
+      "asset_id": "A1",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network via application login",
+        "outcome": "disclosure"
+      }
+    },
+    {
+      "id": "T2",
+      "description": "A malicious insider such as a rogue doctor or nurse deliberately accesses or alters patient records beyond their authorised scope.",
+      "asset_id": "A1",
+      "octave_profile": {
+        "actor": "malicious insider",
+        "motive": "deliberate",
+        "access": "via application",
+        "outcome": "modification"
+      }
+    },
+    {
+      "id": "T3",
+      "description": "An external attacker exploits a vulnerability in the public booking website to gain unauthorised access to backend systems or disrupt the service.",
+      "asset_id": "A3",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network via public web application",
+        "outcome": "interruption"
+      }
+    },
+    {
+      "id": "T4",
+      "description": "An external attacker intercepts unencrypted confirmation emails to obtain patient appointment details and personally identifiable information.",
+      "asset_id": "A4",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network",
+        "outcome": "disclosure"
+      }
+    },
+    {
+      "id": "T5",
+      "description": "A compromised or malicious external IT provider abuses its remote server access to exfiltrate patient records or sabotage the patient records system.",
+      "asset_id": "A5",
+      "octave_profile": {
+        "actor": "external third-party provider",
+        "motive": "deliberate",
+        "access": "remote network access",
+        "outcome": "disclosure"
+      }
+    },
+    {
+      "id": "T6",
+      "description": "An external attacker compromises the IT provider's systems and uses the provider's remote access credentials to reach the clinic's servers.",
+      "asset_id": "A5",
+      "octave_profile": {
+        "actor": "external attacker",
+        "motive": "deliberate",
+        "access": "network via third-party remote access",
+        "outcome": "modification"
+      }
+    },
+    {
+      "id": "T7",
+      "description": "A careless member of staff accidentally overwrites or deletes critical patient records during a routine update.",
+      "asset_id": "A2",
+      "octave_profile": {
+        "actor": "internal staff member",
+        "motive": "accidental",
+        "access": "via application",
+        "outcome": "destruction"
+      }
+    }
+  ]
+}

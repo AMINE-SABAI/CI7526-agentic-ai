@@ -1,0 +1,21 @@
+{
+  "assets": [
+    {"id": "A1", "description": "Customer account credentials"},
+    {"id": "A2", "description": "Customer delivery addresses and order history"},
+    {"id": "A3", "description": "Transaction records"},
+    {"id": "A4", "description": "Product catalogue"},
+    {"id": "A5", "description": "Staff administration interface"}
+  ],
+  "vulnerabilities": [
+    {"id": "V1", "description": "Customer passwords may be stored without secure hashing", "asset_id": "A1"},
+    {"id": "V2", "description": "The login interface may lack rate limiting", "asset_id": "A1"},
+    {"id": "V3", "description": "The customer database may lack adequate access segmentation", "asset_id": "A2"},
+    {"id": "V4", "description": "The administration interface may be accessible from the public internet", "asset_id": "A5"}
+  ],
+  "threats": [
+    {"id": "T1", "description": "An external attacker brute-forces customer accounts", "asset_id": "A1"},
+    {"id": "T2", "description": "An external attacker extracts customer data from the database", "asset_id": "A2"},
+    {"id": "T3", "description": "A malicious staff member alters the product catalogue", "asset_id": "A4"},
+    {"id": "T4", "description": "An attacker compromises the administration interface to access or modify orders", "asset_id": "A5"}
+  ]
+}

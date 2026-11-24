@@ -1,0 +1,6 @@
+A private medical clinic runs a patient records system. Doctors and nurses log
+in with a username and password to consult and update patient files, which
+contain medical history and test results. Appointments are booked by patients
+through a public website, which sends confirmation emails. The clinic outsources
+its IT maintenance to an external provider who holds remote access to the
+servers.
